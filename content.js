@@ -1,8 +1,6 @@
 let allSubmissions = [];
 let lessonSubmissions = [];
 
-let originalPageOneSubmissions = [];
-
 let submissionList;
 
 let currentFilter = "lessons";
@@ -246,6 +244,8 @@ function renderSubmissions() {
 // --------------------------------------------------
 
 async function scanSubmissions() {
+  console.log("SCAN START");
+
   if (isLoading) {
     return;
   }
@@ -277,20 +277,15 @@ async function scanSubmissions() {
     while (true) {
       setStatus(`Scanning page ${page}...`, true);
 
-      let submissions;
+      /*
+       * Always fetch the actual page from Drawabox.
+       *
+       * The user may have opened the extension on
+       * any page, so the live DOM cannot be assumed
+       * to contain page 1.
+       */
 
-      if (page === 1) {
-        /*
-         * Use the original page-1 submissions.
-         *
-         * We cannot read page 1 from the live DOM
-         * because renderSubmissions() modifies it.
-         */
-
-        submissions = originalPageOneSubmissions;
-      } else {
-        submissions = await fetchPage(page);
-      }
+      const submissions = await fetchPage(page);
 
       console.log(`Page ${page}: ${submissions.length} submissions`);
 
@@ -354,6 +349,17 @@ async function scanSubmissions() {
 // --------------------------------------------------
 
 function initialize() {
+  /*
+   * Prevent the extension from initializing more than once
+   * on the same page.
+   */
+
+  if (document.querySelector("#drawabox-filter-ui")) {
+    console.log("Drawabox Filter: Already initialized.");
+
+    return;
+  }
+
   const submissions = document.querySelectorAll("li.homework-submission");
 
   if (submissions.length === 0) {
@@ -361,15 +367,6 @@ function initialize() {
 
     return;
   }
-
-  /*
-   * Save an untouched copy of page 1 BEFORE
-   * the extension modifies the DOM.
-   */
-
-  originalPageOneSubmissions = Array.from(submissions).map((submission) =>
-    submission.cloneNode(true),
-  );
 
   /*
    * Store the actual submission list.
