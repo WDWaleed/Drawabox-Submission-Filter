@@ -1,5 +1,7 @@
 let allSubmissions = [];
 let lessonSubmissions = [];
+let drawingPromptSubmissions = [];
+let otherSubmissions = [];
 
 let originalPageSubmissions = [];
 
@@ -108,26 +110,67 @@ function createUI() {
 
             <div class="dab-filter-body">
 
-                <div class="dab-filter-mode">
+                <div class="dab-filter-options">
 
-                    <span class="dab-mode-label dab-active-label">
-                        All submissions
-                    </span>
-
-                    <label class="dab-switch">
-
+                    <label class="dab-radio-option">
                         <input
-                            type="checkbox"
-                            id="dab-filter-toggle"
+                            type="radio"
+                            name="dab-filter"
+                            value="all"
+                            checked
                         >
 
-                        <span class="dab-slider"></span>
+                        <span class="dab-radio"></span>
 
+                        <span class="dab-mode-label dab-active-label">
+                            All
+                        </span>
                     </label>
 
-                    <span class="dab-mode-label">
-                        Lessons only
-                    </span>
+
+                    <label class="dab-radio-option">
+                        <input
+                            type="radio"
+                            name="dab-filter"
+                            value="lessons"
+                        >
+
+                        <span class="dab-radio"></span>
+
+                        <span class="dab-mode-label">
+                            Lessons Only
+                        </span>
+                    </label>
+
+
+                    <label class="dab-radio-option">
+                        <input
+                            type="radio"
+                            name="dab-filter"
+                            value="drawing-prompts"
+                        >
+
+                        <span class="dab-radio"></span>
+
+                        <span class="dab-mode-label">
+                            Drawing Prompts Only
+                        </span>
+                    </label>
+
+
+                    <label class="dab-radio-option">
+                        <input
+                            type="radio"
+                            name="dab-filter"
+                            value="others"
+                        >
+
+                        <span class="dab-radio"></span>
+
+                        <span class="dab-mode-label">
+                            Others
+                        </span>
+                    </label>
 
                 </div>
 
@@ -162,21 +205,15 @@ function createUI() {
     return;
   }
 
-  document
-    .querySelector("#dab-filter-toggle")
-    .addEventListener("change", (event) => {
-      currentFilter = event.target.checked ? "lessons" : "all";
+  document.querySelectorAll('input[name="dab-filter"]').forEach((radio) => {
+    radio.addEventListener("change", (event) => {
+      currentFilter = event.target.value;
 
       updateActiveLabel();
 
-      /*
-       * The scan has already happened.
-       * Toggling only changes which cached
-       * submissions are displayed.
-       */
-
       renderSubmissions();
     });
+  });
 
   document.querySelector("#dab-refresh").addEventListener("click", () => {
     scanSubmissions();
@@ -188,15 +225,19 @@ function createUI() {
 // --------------------------------------------------
 
 function updateActiveLabel() {
-  const labels = document.querySelectorAll(".dab-mode-label");
+  const options = document.querySelectorAll(".dab-radio-option");
 
-  if (labels.length < 2) {
-    return;
-  }
+  options.forEach((option) => {
+    const radio = option.querySelector('input[type="radio"]');
 
-  labels[0].classList.toggle("dab-active-label", currentFilter === "all");
+    const label = option.querySelector(".dab-mode-label");
 
-  labels[1].classList.toggle("dab-active-label", currentFilter === "lessons");
+    if (!radio || !label) {
+      return;
+    }
+
+    label.classList.toggle("dab-active-label", radio.value === currentFilter);
+  });
 }
 
 // --------------------------------------------------
@@ -226,16 +267,32 @@ function renderSubmissions() {
     return;
   }
 
-  const submissions =
-    currentFilter === "lessons" ? lessonSubmissions : allSubmissions;
+  let submissions;
+
+  switch (currentFilter) {
+    case "lessons":
+      submissions = lessonSubmissions;
+      break;
+
+    case "drawing-prompts":
+      submissions = drawingPromptSubmissions;
+      break;
+
+    case "others":
+      submissions = otherSubmissions;
+      break;
+
+    case "all":
+    default:
+      submissions = allSubmissions;
+      break;
+  }
 
   submissionList.innerHTML = "";
 
   submissions.forEach((submission) => {
     submissionList.appendChild(submission.cloneNode(true));
   });
-
-  const lessonCount = lessonSubmissions.length;
 
   const totalCount = allSubmissions.length;
 
@@ -247,15 +304,58 @@ function renderSubmissions() {
     }`;
   }
 
-  setStatus(
-    currentFilter === "lessons"
-      ? `Showing ${lessonCount} lesson submission${
-          lessonCount === 1 ? "" : "s"
-        }`
-      : `Showing all ${totalCount} submissions`,
+  let statusMessage;
 
-    false,
-  );
+  switch (currentFilter) {
+    case "lessons":
+      statusMessage = `Showing ${lessonSubmissions.length} lesson submission${
+        lessonSubmissions.length === 1 ? "" : "s"
+      }`;
+      break;
+
+    case "drawing-prompts":
+      statusMessage = `Showing ${drawingPromptSubmissions.length} drawing prompt submission${
+        drawingPromptSubmissions.length === 1 ? "" : "s"
+      }`;
+      break;
+
+    case "others":
+      statusMessage = `Showing ${otherSubmissions.length} other submission${
+        otherSubmissions.length === 1 ? "" : "s"
+      }`;
+      break;
+
+    case "all":
+    default:
+      statusMessage = `Showing all ${totalCount} submissions`;
+      break;
+  }
+
+  setStatus(statusMessage, false);
+}
+
+// --------------------------------------------------
+// Submission classification
+// --------------------------------------------------
+
+function isLessonSubmission(title) {
+  if (/^Lesson [1-7]: /.test(title)) {
+    return true;
+  }
+
+  const challenges = [
+    "250 Box Challenge",
+    "250 Cylinder Challenge",
+    "25 Wheel Challenge",
+    "25 Texture Challenge",
+    "100 Treasure Chest Challenge",
+  ];
+
+  return challenges.some((challenge) => title.startsWith(challenge));
+}
+
+function isDrawingPromptSubmission(title) {
+  return title.startsWith("Drawing Prompt: ");
 }
 
 // --------------------------------------------------
@@ -271,13 +371,13 @@ async function scanSubmissions() {
 
   isLoading = true;
 
-  const toggle = document.querySelector("#dab-filter-toggle");
+  const filterOptions = document.querySelectorAll('input[name="dab-filter"]');
 
   const refresh = document.querySelector("#dab-refresh");
 
-  if (toggle) {
-    toggle.disabled = true;
-  }
+  filterOptions.forEach((radio) => {
+    radio.disabled = true;
+  });
 
   if (refresh) {
     refresh.disabled = true;
@@ -290,6 +390,8 @@ async function scanSubmissions() {
   try {
     allSubmissions = [];
     lessonSubmissions = [];
+    drawingPromptSubmissions = [];
+    otherSubmissions = [];
 
     // Drawabox displays a maximum of 20
     // submissions per page.
@@ -317,18 +419,19 @@ async function scanSubmissions() {
         const titleElement = submission.querySelector("div.meta > h3");
 
         if (!titleElement) {
+          otherSubmissions.push(clone.cloneNode(true));
+
           return;
         }
 
         const title = titleElement.textContent.trim();
 
-        /*
-         * Drawing Prompt submissions always
-         * begin with "Drawing Prompt: ".
-         */
-
-        if (!title.startsWith("Drawing Prompt: ")) {
+        if (isLessonSubmission(title)) {
           lessonSubmissions.push(clone.cloneNode(true));
+        } else if (isDrawingPromptSubmission(title)) {
+          drawingPromptSubmissions.push(clone.cloneNode(true));
+        } else {
+          otherSubmissions.push(clone.cloneNode(true));
         }
       });
 
@@ -351,12 +454,11 @@ async function scanSubmissions() {
 
     console.log(`Lesson submissions: ${lessonSubmissions.length}`);
 
-    /*
-     * Render according to the current toggle.
-     *
-     * The default is "all", so the initial scan
-     * does not hide Drawing Prompt submissions.
-     */
+    console.log(
+      `Drawing prompt submissions: ${drawingPromptSubmissions.length}`,
+    );
+
+    console.log(`Other submissions: ${otherSubmissions.length}`);
 
     renderSubmissions();
   } catch (error) {
@@ -366,9 +468,9 @@ async function scanSubmissions() {
   } finally {
     isLoading = false;
 
-    if (toggle) {
-      toggle.disabled = false;
-    }
+    filterOptions.forEach((radio) => {
+      radio.disabled = false;
+    });
 
     if (refresh) {
       refresh.disabled = false;
@@ -419,8 +521,8 @@ function initialize() {
    * Scan automatically so the total count and
    * filtered results are ready immediately.
    *
-   * The current filter is "all", so the scan
-   * will not hide any submissions.
+   * The default is "all", so the initial scan
+   * does not hide any submissions.
    */
 
   scanSubmissions();

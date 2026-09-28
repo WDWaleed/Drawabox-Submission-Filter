@@ -289,3 +289,91 @@
     font-size: 14px;
   }
 }
+
+/* --------------------------------------------------
+   Radio options
+-------------------------------------------------- */
+
+.dab-filter-options {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  flex-wrap: wrap;
+}
+
+.dab-radio-option {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  cursor: pointer;
+}
+
+.dab-radio-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dab-radio {
+  width: 14px;
+  height: 14px;
+
+  border: 1.5px solid #aaa;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.dab-radio::after {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #555;
+
+  transform: scale(0);
+
+  transition: transform 0.15s ease;
+}
+
+.dab-radio-option input:checked + .dab-radio {
+  border-color: #555;
+}
+
+.dab-radio-option input:checked + .dab-radio::after {
+  transform: scale(1);
+}
+
+.dab-mode-label {
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #999;
+
+  transition:
+    color 0.2s ease,
+    font-weight 0.2s ease;
+}
+
+.dab-active-label {
+  color: #444;
+  font-weight: 600;
+}
+
+.dab-radio-option input:disabled + .dab-radio {
+  opacity: 0.55;
+}
+
+.dab-radio-option input:disabled ~ .dab-mode-label {
+  opacity: 0.55;
+}
