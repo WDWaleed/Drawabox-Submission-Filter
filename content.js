@@ -1,9 +1,11 @@
 let allSubmissions = [];
 let lessonSubmissions = [];
 
+let originalPageSubmissions = [];
+
 let submissionList;
 
-let currentFilter = "lessons";
+let currentFilter = "all";
 let isLoading = false;
 
 // --------------------------------------------------
@@ -25,12 +27,12 @@ function getPageUrl(page) {
 
   // Drawabox uses:
   // Page 1 -> /submissions/
-  // Page 2 -> /submissions/1
-  // Page 3 -> /submissions/2
-  // Page 4 -> /submissions/3
+  // Page 2 -> /submissions/2
+  // Page 3 -> /submissions/3
+  // Page 4 -> /submissions/4
   // etc.
 
-  return page === 1 ? `${baseUrl}/` : `${baseUrl}/${page - 1}`;
+  return page === 1 ? `${baseUrl}/` : `${baseUrl}/${page}`;
 }
 
 // --------------------------------------------------
@@ -84,7 +86,7 @@ function createUI() {
                         </div>
 
                         <div class="dab-filter-subtitle">
-                            Showing lesson submissions
+                            Scanning submissions...
                         </div>
 
                     </div>
@@ -108,7 +110,7 @@ function createUI() {
 
                 <div class="dab-filter-mode">
 
-                    <span class="dab-mode-label">
+                    <span class="dab-mode-label dab-active-label">
                         All submissions
                     </span>
 
@@ -117,14 +119,13 @@ function createUI() {
                         <input
                             type="checkbox"
                             id="dab-filter-toggle"
-                            checked
                         >
 
                         <span class="dab-slider"></span>
 
                     </label>
 
-                    <span class="dab-mode-label dab-active-label">
+                    <span class="dab-mode-label">
                         Lessons only
                     </span>
 
@@ -133,7 +134,7 @@ function createUI() {
 
                 <div
                     id="dab-filter-status"
-                    class="dab-filter-status"
+                    class="dab-filter-status dab-loading"
                 >
 
                     <span class="dab-spinner"></span>
@@ -166,12 +167,36 @@ function createUI() {
     .addEventListener("change", (event) => {
       currentFilter = event.target.checked ? "lessons" : "all";
 
+      updateActiveLabel();
+
+      /*
+       * The scan has already happened.
+       * Toggling only changes which cached
+       * submissions are displayed.
+       */
+
       renderSubmissions();
     });
 
   document.querySelector("#dab-refresh").addEventListener("click", () => {
     scanSubmissions();
   });
+}
+
+// --------------------------------------------------
+// Active label
+// --------------------------------------------------
+
+function updateActiveLabel() {
+  const labels = document.querySelectorAll(".dab-mode-label");
+
+  if (labels.length < 2) {
+    return;
+  }
+
+  labels[0].classList.toggle("dab-active-label", currentFilter === "all");
+
+  labels[1].classList.toggle("dab-active-label", currentFilter === "lessons");
 }
 
 // --------------------------------------------------
@@ -217,15 +242,9 @@ function renderSubmissions() {
   const subtitle = document.querySelector(".dab-filter-subtitle");
 
   if (subtitle) {
-    if (currentFilter === "lessons") {
-      subtitle.textContent = `${lessonCount} lesson submission${
-        lessonCount === 1 ? "" : "s"
-      }`;
-    } else {
-      subtitle.textContent = `${totalCount} total submission${
-        totalCount === 1 ? "" : "s"
-      }`;
-    }
+    subtitle.textContent = `${totalCount} total submission${
+      totalCount === 1 ? "" : "s"
+    }`;
   }
 
   setStatus(
@@ -272,18 +291,14 @@ async function scanSubmissions() {
     allSubmissions = [];
     lessonSubmissions = [];
 
+    // Drawabox displays a maximum of 20
+    // submissions per page.
+    const PAGE_SIZE = 20;
+
     let page = 1;
 
     while (true) {
       setStatus(`Scanning page ${page}...`, true);
-
-      /*
-       * Always fetch the actual page from Drawabox.
-       *
-       * The user may have opened the extension on
-       * any page, so the live DOM cannot be assumed
-       * to contain page 1.
-       */
 
       const submissions = await fetchPage(page);
 
@@ -317,12 +332,31 @@ async function scanSubmissions() {
         }
       });
 
+      /*
+       * Drawabox displays a maximum of 20
+       * submissions per page.
+       *
+       * If a page contains fewer than 20
+       * submissions, it is the final page.
+       */
+
+      if (submissions.length < PAGE_SIZE) {
+        break;
+      }
+
       page++;
     }
 
     console.log(`Total submissions: ${allSubmissions.length}`);
 
     console.log(`Lesson submissions: ${lessonSubmissions.length}`);
+
+    /*
+     * Render according to the current toggle.
+     *
+     * The default is "all", so the initial scan
+     * does not hide Drawing Prompt submissions.
+     */
 
     renderSubmissions();
   } catch (error) {
@@ -369,14 +403,25 @@ function initialize() {
   }
 
   /*
-   * Store the actual submission list.
-   * This is where filtered submissions will
-   * eventually be rendered.
+   * Store the original submissions currently
+   * displayed by Drawabox.
    */
+
+  originalPageSubmissions = Array.from(submissions).map((submission) =>
+    submission.cloneNode(true),
+  );
 
   submissionList = submissions[0].parentElement;
 
   createUI();
+
+  /*
+   * Scan automatically so the total count and
+   * filtered results are ready immediately.
+   *
+   * The current filter is "all", so the scan
+   * will not hide any submissions.
+   */
 
   scanSubmissions();
 }
