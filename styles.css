@@ -1,0 +1,291 @@
+/* --------------------------------------------------
+   Main card
+-------------------------------------------------- */
+
+#drawabox-filter-ui {
+  margin-bottom: 24px;
+}
+
+.dab-filter-card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+
+  overflow: hidden;
+
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+/* --------------------------------------------------
+   Header
+-------------------------------------------------- */
+
+.dab-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 16px 18px;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.dab-filter-title {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.dab-filter-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #f0f3f6;
+
+  color: #555;
+
+  font-size: 15px;
+}
+
+.dab-filter-heading {
+  font-size: 15px;
+  font-weight: 600;
+
+  line-height: 1.3;
+
+  color: #333;
+}
+
+.dab-filter-subtitle {
+  margin-top: 2px;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #888;
+}
+
+/* --------------------------------------------------
+   Refresh button
+-------------------------------------------------- */
+
+.dab-icon-button {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #777;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.dab-icon-button:hover {
+  background: #f2f2f2;
+  color: #333;
+}
+
+.dab-icon-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* --------------------------------------------------
+   Body
+-------------------------------------------------- */
+
+.dab-filter-body {
+  padding: 14px 18px;
+}
+
+/* --------------------------------------------------
+   Toggle
+-------------------------------------------------- */
+
+.dab-filter-mode {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+}
+
+.dab-mode-label {
+  font-size: 12px;
+
+  color: #999;
+
+  font-weight: 500;
+
+  transition:
+    color 0.2s ease,
+    font-weight 0.2s ease;
+}
+
+.dab-active-label {
+  color: #444;
+  font-weight: 600;
+}
+
+/* Switch */
+
+.dab-switch {
+  position: relative;
+
+  display: inline-block;
+
+  width: 38px;
+  height: 21px;
+
+  flex-shrink: 0;
+}
+
+.dab-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.dab-slider {
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: 999px;
+
+  background: #ccc;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.dab-slider::before {
+  content: "";
+
+  position: absolute;
+
+  width: 15px;
+  height: 15px;
+
+  left: 3px;
+  top: 3px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+
+  transition: transform 0.2s ease;
+}
+
+.dab-switch input:checked + .dab-slider {
+  background: #555;
+}
+
+.dab-switch input:checked + .dab-slider::before {
+  transform: translateX(17px);
+}
+
+/* --------------------------------------------------
+   Status
+-------------------------------------------------- */
+
+.dab-filter-status {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 12px;
+
+  min-height: 18px;
+
+  font-size: 11px;
+
+  font-weight: 500;
+
+  color: #999;
+}
+
+/* --------------------------------------------------
+   Spinner
+-------------------------------------------------- */
+
+.dab-spinner {
+  width: 12px;
+  height: 12px;
+
+  border: 2px solid #ddd;
+  border-top-color: #666;
+
+  border-radius: 50%;
+
+  display: none;
+}
+
+.dab-filter-status.dab-loading .dab-spinner {
+  display: block;
+
+  animation: dab-spin 0.75s linear infinite;
+}
+
+@keyframes dab-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------
+   Refresh animation
+-------------------------------------------------- */
+
+.dab-spinning span {
+  animation: dab-spin 0.75s linear infinite;
+}
+
+/* --------------------------------------------------
+   Mobile
+-------------------------------------------------- */
+
+@media (max-width: 600px) {
+  .dab-filter-header {
+    padding: 14px;
+  }
+
+  .dab-filter-body {
+    padding: 12px 14px;
+  }
+
+  .dab-filter-heading {
+    font-size: 14px;
+  }
+}

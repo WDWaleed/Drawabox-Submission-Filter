@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Drawabox Submission Filter",
+  "version": "1.0.0",
+  "description": "Filters Drawing Prompt submissions from Drawabox sketchbooks.",
+  "permissions": ["scripting"],
+  "host_permissions": ["https://drawabox.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://drawabox.com/community/sketchbook/*/submissions*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
